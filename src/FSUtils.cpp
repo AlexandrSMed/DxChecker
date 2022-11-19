@@ -9,7 +9,7 @@
 
 std::filesystem::path TDW::FS::makeNewDocumentName(const std::wstring& name_prefix) {
     PWSTR myDocumentsStr;
-    auto getMyDocumentsResult = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, NULL, &myDocumentsStr);
+    auto getMyDocumentsResult = SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, nullptr, &myDocumentsStr);
     if(FAILED(getMyDocumentsResult)) {
         CoTaskMemFree(myDocumentsStr);
         throw std::system_error{

@@ -1,5 +1,3 @@
-#CMakeLists.txt
-
 # =======================================================#
 # Project Settings
 # =======================================================#
@@ -37,10 +35,14 @@ add_subdirectory(libs)
 # Compiler Settings
 # =======================================================#
 
-target_compile_options(${PROJ_NAME} PRIVATE  -DLOG
+target_compile_definitions(${PROJ_NAME} PRIVATE NOMINMAX)
+target_compile_options(${PROJ_NAME} PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:-Zc:__cplusplus -W4>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wno-c++98-compat -Wno-missing-prototypes>
-)
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-missing-prototypes
+        -Wno-nonportable-system-include-path>)
 target_include_directories(${PROJ_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/src/")
 
 # =======================================================#

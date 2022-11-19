@@ -1,6 +1,5 @@
 #pragma once
 
-#include "GPUDescriptor.h"
 #include <unordered_map>
 #include <string>
 #include <d3d11.h>
@@ -13,7 +12,7 @@ namespace TDW::Utils {
     struct AdapterDescHash {
         inline size_t operator()(const DXGI_ADAPTER_DESC& ad) const {
             const auto luid = ad.AdapterLuid;
-            return std::hash<LONG>()(luid.HighPart | luid.LowPart);
+            return std::hash<DWORD>()(static_cast<DWORD>(luid.HighPart) | luid.LowPart);
         }
     };
 

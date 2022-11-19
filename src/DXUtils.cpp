@@ -1,5 +1,4 @@
 #include "DXUtils.h"
-#include <dxgi.h>
 #include <comdef.h>
 
 #include <array>
@@ -12,7 +11,7 @@ static IDXGIFactory1* sharedDXGIFactory() {
         return factoryPtr;
     }
 
-    auto result = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&factoryPtr);
+    auto result = CreateDXGIFactory1(IID_IDXGIFactory1, reinterpret_cast<void**>(&factoryPtr));
     if(FAILED(result)) {
         throw std::system_error{
             result, std::system_category(),
@@ -44,13 +43,12 @@ static std::wstring to_wstring(D3D_FEATURE_LEVEL level) {
             return L"Direct3D 12.0";
         case D3D_FEATURE_LEVEL_12_1:
             return L"Direct3D 12.1";
-        default:
-            return L"Undefined";
     }
+    return L"Undefined";
 }
 
 bool TDW::Utils::operator==(const LUID& lhs, const LUID& rhs) {
-    return (lhs.HighPart == rhs.HighPart) && (lhs.LowPart == lhs.LowPart);
+    return (lhs.HighPart == rhs.HighPart) && (lhs.LowPart == rhs.LowPart);
 }
 
 TDW::Utils::adapter_desc_feature_map TDW::Utils::supportedDXVersions() {
@@ -64,15 +62,6 @@ TDW::Utils::adapter_desc_feature_map TDW::Utils::supportedDXVersions() {
         D3D_FEATURE_LEVEL_9_3,
         D3D_FEATURE_LEVEL_9_2,
         D3D_FEATURE_LEVEL_9_1,
-    };
-
-    constexpr std::array driverTypes{
-        D3D_DRIVER_TYPE_HARDWARE,
-        D3D_DRIVER_TYPE_WARP,
-        D3D_DRIVER_TYPE_REFERENCE,
-        D3D_DRIVER_TYPE_SOFTWARE,
-        D3D_DRIVER_TYPE_NULL,
-        D3D_DRIVER_TYPE_UNKNOWN
     };
   
     const auto deviceFactory = sharedDXGIFactory();
@@ -88,7 +77,7 @@ TDW::Utils::adapter_desc_feature_map TDW::Utils::supportedDXVersions() {
                 << _com_error{ adapterDescriptionResult }.ErrorMessage()
                 << std::endl;
             continue;
-        };
+        }
 
         auto supportedLevel = D3D_FEATURE_LEVEL_1_0_CORE;
         for(decltype(featureLevels)::size_type shift = 0;
@@ -124,31 +113,36 @@ TDW::Utils::adapter_desc_feature_map TDW::Utils::supportedDXVersions() {
 
 #include <sstream>
 #include <iomanip>
+#include <limits>
 
 std::wstring TDW::Utils::printSupportedDXVersions(const adapter_desc_feature_map& supportedVersions) {
     std::wostringstream stream;
     stream << std::endl << std::endl << std::endl
         << "|==============DirectX API support report==============|"
         << std::endl << std::endl;
-    auto insertMemoryString = [](std::wostringstream& stream, std::wstring name, SIZE_T bytes) {
+    auto insertMemoryString = [](std::wostringstream& wos, std::wstring name, SIZE_T bytes) {
+        std::wios formatStorage{ nullptr };
+        formatStorage.copyfmt(wos);
+
         constexpr auto bytesPerKiB = 1024.f;
         constexpr auto bytesPerMiB = bytesPerKiB * 1024.f;
         constexpr auto bytesPerGiB = bytesPerMiB * 1024.f;
 
         const auto floatBytes = static_cast<float>(bytes);
-        stream << name << std::setprecision(1);
-        if(bytes > bytesPerGiB / 2) {
-            stream << floatBytes / bytesPerGiB << " GiB";
-        } else if(bytes > bytesPerMiB / 2) {
-            stream << floatBytes / bytesPerMiB << " MiB";
-        } else if(bytes > bytesPerKiB / 2) {
-            stream << floatBytes / bytesPerKiB << " KiB";
-        } else if(bytes > 0) {
-            stream << floatBytes << " B";
+        wos << name << std::setprecision(1) << std::fixed;
+        if(floatBytes > bytesPerGiB / 2.f) {
+            wos << floatBytes / bytesPerGiB << " GiB";
+        } else if(floatBytes > bytesPerMiB / 2.f) {
+            wos << floatBytes / bytesPerMiB << " MiB";
+        } else if(floatBytes > bytesPerKiB / 2.f) {
+            wos << floatBytes / bytesPerKiB << " KiB";
+        } else if(floatBytes > 0) {
+            wos << floatBytes << " B";
         } else {
-            stream << 0;
+            wos << 0;
         }
-        stream << std::fixed << std::endl;
+        wos << std::endl;
+        wos.copyfmt(formatStorage);
     };
 
     for(const auto& record : supportedVersions) {
