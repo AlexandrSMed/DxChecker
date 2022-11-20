@@ -14,11 +14,13 @@
             "installDir": "${sourceDir}/out/install/${presetName}",
             "warnings": {
                 "deprecated": true,
-                "systemVars": true,
                 "uninitialized": true,
-                "dev": false
+                "dev": true
             },
-
+            "errors": {
+                "deprecated": true,
+                "dev": true
+            },
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
